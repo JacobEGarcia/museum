@@ -242,6 +242,10 @@ for (let i=1;i<=5;i++){
   grp.add(holder);
   const entry = { cfg:{ id:'diamond', title:'The Acceleration Diamond', desc:'A gem cut by pressure and time - the two ingredients of every great leap.', anim:'spin', scale:1 }, grp, holder, t:0 };
   exhibits.push(entry); raycastTargets.push(grp);
+  const hallLight = new THREE.PointLight(0xfff2dd, 60, 45, 2);
+  hallLight.position.set(0, 7, -(R+16)); scene.add(hallLight);
+  const hallLight2 = new THREE.PointLight(0xdfe8ff, 25, 30, 2);
+  hallLight2.position.set(0, 5, -(R+26)); scene.add(hallLight2);
   const glint = new THREE.PointLight(0xbfd9ff, 25, 8, 2); glint.position.set(0, topY+1.6, -(R+16)); scene.add(glint);
 })();
 
