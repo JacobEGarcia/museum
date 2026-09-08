@@ -10,8 +10,6 @@ const EXHIBITS = [
   { id:'rocket', mat:'silver', file:'rocket.glb', title:'Acceleration One', desc:'Retro-futurist orbital rocket. Growth is good. More energy, more compute, more life.', anim:'hover', scale:1.0 },
   { id:'humanoid', mat:'pearl', file:'humanoid.glb', title:'The Successor', desc:'General-purpose humanoid. The next pair of hands humanity builds will not be hands at all.', anim:'breathe', scale:1.0 },
   { id:'satellite', mat:'copper', file:'satellite.glb', title:'Signal No. 1', desc:'Vintage satellite, beaming culture back to Earth. CYBERIA - signals from the wired world.', anim:'spin', scale:1.0 },
-  { id:'burrito', mat:'jade', file:'burrito.glb', title:'Terabyte Burrito', desc:'One burrito = one trillion bites. Lossless flavor, zero dependencies. We did the math.', anim:'spin', scale:1.0 },
-  { id:'diamond', mat:'crystal', file:'diamond.glb', title:'The Acceleration Diamond', desc:'A gem cut by pressure and time - the two ingredients of every great leap.', anim:'spin', scale:1.0 },
 ];
 
 // ---------- Renderer / scene ----------
@@ -276,7 +274,31 @@ function animateExhibits(dt, t){
 const controls = new PointerLockControls(camera, renderer.domElement);
 const overlay = document.getElementById('overlay');
 const hint = document.getElementById('hint');
-document.getElementById('enter').addEventListener('click', ()=>{ controls.lock(); });
+let dragMode = false, yaw = 0, pitch = 0;
+camera.rotation.order = 'YXZ';
+document.getElementById('enter').addEventListener('click', ()=>{
+  try { controls.lock(); } catch(e) {}
+  setTimeout(()=>{
+    if (!controls.isLocked){
+      dragMode = true;
+      const e = camera.rotation; yaw = e.y; pitch = e.x;
+      overlay.classList.add('hidden');
+      hint.textContent = 'DRAG TO LOOK · W A S D TO WALK · CLICK AN EXHIBIT TO INSPECT';
+      hint.classList.add('show'); setTimeout(()=>hint.classList.remove('show'), 6000);
+    }
+  }, 400);
+});
+let dragStart = null;
+renderer.domElement.addEventListener('pointerdown', e=>{ if (dragMode && !controls.isLocked) dragStart = {x:e.clientX, y:e.clientY, yaw, pitch, moved:false}; });
+addEventListener('pointermove', e=>{
+  if (!dragStart) return;
+  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+  if (Math.abs(dx)+Math.abs(dy) > 4) dragStart.moved = true;
+  yaw = dragStart.yaw - dx * 0.0032;
+  pitch = THREE.MathUtils.clamp(dragStart.pitch - dy * 0.0032, -1.4, 1.4);
+  camera.rotation.set(pitch, yaw, 0);
+});
+addEventListener('pointerup', ()=>{ dragStart = null; });
 controls.addEventListener('lock', ()=>{ overlay.classList.add('hidden'); hint.classList.add('show'); setTimeout(()=>hint.classList.remove('show'), 6000); });
 controls.addEventListener('unlock', ()=>{ if(!touring) overlay.classList.remove('hidden'); });
 
@@ -317,9 +339,11 @@ function hidePlaque(){ plaque.classList.remove('show'); }
 function findExhibitRoot(obj){
   while (obj){ if (exhibits.some(e=>e.grp===obj)) return obj; obj = obj.parent; } return null;
 }
-renderer.domElement.addEventListener('click', ()=>{
-  if (!controls.isLocked) return;
-  ray.setFromCamera(new THREE.Vector2(0,0), camera);
+renderer.domElement.addEventListener('click', (ev)=>{
+  if (!controls.isLocked && !dragMode) return;
+  if (dragStart && dragStart.moved) return;
+  if (controls.isLocked) ray.setFromCamera(new THREE.Vector2(0,0), camera);
+  else ray.setFromCamera(new THREE.Vector2((ev.clientX/innerWidth)*2-1, -(ev.clientY/innerHeight)*2+1), camera);
   const hits = ray.intersectObjects(raycastTargets, true);
   if (!hits.length || hits[0].distance > 14) { hidePlaque(); return; }
   const root = findExhibitRoot(hits[0].object);
@@ -364,7 +388,7 @@ function tick(){
   const dt = Math.min(clock.getDelta(), .05);
   animateExhibits(dt, clock.elapsedTime);
   if (tourState) runTour(dt);
-  else if (controls.isLocked) movePlayer(dt);
+  else if (controls.isLocked || dragMode) movePlayer(dt);
   // rocket flame flicker
   for (const e of exhibits){
     if (e.cfg.anim==='hover' && e.holder && !e.holder.userData.flame){
