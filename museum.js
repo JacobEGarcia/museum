@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 // ---------- Exhibit manifest ----------
 const EXHIBITS = [
@@ -144,6 +145,7 @@ arch.position.set(0, 3.6, -R+.4); scene.add(arch);
 
 // ---------- Pedestals + exhibits ----------
 const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
 const manager = new THREE.LoadingManager();
 const progressEl = document.getElementById('progress');
 let loadedCount = 0;
