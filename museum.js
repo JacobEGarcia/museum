@@ -194,6 +194,7 @@ function placeModel(gltfScene, cfg, topY, grp){
   };
   model.traverse(o=>{ if(o.isMesh){ if(!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); o.castShadow=true; o.receiveShadow=true; if(cfg.mat){ o.material = FINE[cfg.mat]; } }});
   grp.add(holder);
+  holder.userData.baseY = holder.position.y;
   return holder;
 }
 
@@ -269,6 +270,7 @@ function animateExhibits(dt, t){
       case 'breathe': { const s = 1 + Math.sin(e.t*1.6)*.012; h.scale.set(s,s,s); h.rotation.y += dt*.4; break; }
       case 'hover': {
         h.rotation.y += dt*.6;
+        if (h.userData.baseY === undefined) h.userData.baseY = h.position.y;
         h.position.y = h.userData.baseY + Math.sin(e.t*2)*.18;
         break; }
     }
