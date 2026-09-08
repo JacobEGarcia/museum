@@ -390,6 +390,7 @@ function runTour(dt){
 }
 
 // ---------- Loop ----------
+window.__cam = camera; window.__exhibits = exhibits;
 function tick(){
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), .05);
