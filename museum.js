@@ -192,7 +192,7 @@ function placeModel(gltfScene, cfg, topY, grp){
     jade:   new THREE.MeshStandardMaterial({ color:0x2e8b74, roughness:.25, metalness:.1 }),
     crystal:new THREE.MeshPhysicalMaterial({ color:0x9fc8ff, roughness:.05, metalness:0, transmission:.6, thickness:1.2, ior:1.8 }),
   };
-  model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; if(cfg.mat){ o.material = FINE[cfg.mat]; } }});
+  model.traverse(o=>{ if(o.isMesh){ if(!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); o.castShadow=true; o.receiveShadow=true; if(cfg.mat){ o.material = FINE[cfg.mat]; } }});
   grp.add(holder);
   return holder;
 }
